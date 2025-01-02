@@ -40,6 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     try {
       setIsLoading(true);
+      console.log('Checking auth, current pathname:', pathname);
+      
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
         headers: {
@@ -49,22 +51,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (!response.ok) {
+        console.log('Auth check failed, status:', response.status);
         setUser(null);
         if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
-          router.replace('/login');
+          console.log('Redirecting to login from protected route');
+          await router.push('/login');
         }
         return;
       }
       
       const { user } = await response.json();
+      console.log('Auth check successful, user:', user);
       setUser(user);
 
       if (pathname === '/login' || pathname === '/register') {
         const redirectTo = user.role === 'ADMIN' ? '/admin' : '/dashboard';
-        router.replace(redirectTo);
+        console.log('Redirecting from auth page to:', redirectTo);
+        await router.push(redirectTo);
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('Auth check error:', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -78,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsAuthenticating(true);
     try {
+      console.log('Attempting login...');
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 
@@ -92,10 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
+      console.log('Login successful, user:', data.user);
       setUser(data.user);
       
-      router.replace(data.user.role === 'ADMIN' ? '/admin' : '/dashboard');
+      const redirectTo = data.user.role === 'ADMIN' ? '/admin' : '/dashboard';
+      console.log('Redirecting to:', redirectTo);
+      await router.push(redirectTo);
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     } finally {
       setIsAuthenticating(false);

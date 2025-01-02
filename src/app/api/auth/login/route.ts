@@ -6,6 +6,7 @@ import prisma from '@/lib/prisma';
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
+    console.log('Login attempt for:', email);
 
     const user = await prisma.user.findUnique({
       where: { email }
@@ -29,6 +30,8 @@ export async function POST(req: Request) {
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('7d')
       .sign(secret);
+
+    console.log('Generated token for user:', user.id);
 
     const response = NextResponse.json({
       user: {

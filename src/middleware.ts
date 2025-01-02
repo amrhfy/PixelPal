@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
 
       const { payload } = await jose.jwtVerify(token, secret);
       const decoded = payload as unknown as JWTPayload;
-      console.log("Token decoded:", decoded);
+      console.log("Token decoded successfully:", decoded);
 
       // Add role to headers
       requestHeaders.set('x-user-role', decoded.role);
@@ -41,16 +41,17 @@ export async function middleware(request: NextRequest) {
       // If on auth pages with valid token, redirect to appropriate dashboard
       if (isAuthPage) {
         const redirectUrl = decoded.role === 'ADMIN' ? '/admin' : '/dashboard';
+        console.log("Redirecting from auth page to:", redirectUrl);
         return NextResponse.redirect(new URL(redirectUrl, request.url));
       }
 
-      // Handle admin routes - ensure only admins can access
+      // Handle admin routes
       if (isAdminPage && decoded.role !== 'ADMIN') {
         console.log("Non-admin attempting to access admin route");
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
 
-      // Allow access to dashboard routes with headers
+      // Allow access to protected routes
       return NextResponse.next({
         request: {
           headers: requestHeaders,
@@ -58,6 +59,7 @@ export async function middleware(request: NextRequest) {
       });
     } catch (error) {
       console.error("Token verification failed:", error);
+      // Clear invalid token and redirect to login
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete('token');
       return response;
