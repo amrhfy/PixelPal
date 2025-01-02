@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import * as bcrypt from 'bcryptjs';
 import * as jose from 'jose';
 import prisma from '@/lib/prisma';
+import { signJWT } from '@/lib/jwt';
 
 export async function POST(req: Request) {
   try {
@@ -19,17 +20,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || 'your-secret-key'
-    );
-
-    const token = await new jose.SignJWT({ 
+    const token = await signJWT({ 
       userId: user.id,
       role: user.role 
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .sign(secret);
+    });
 
     console.log('Generated token for user:', user.id);
 

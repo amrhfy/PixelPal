@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import * as jose from 'jose';
+import { verifyJWT } from '@/lib/jwt';
 
 interface JWTPayload {
   userId: string;
@@ -26,44 +26,33 @@ export async function middleware(request: NextRequest) {
   }
 
   if (token) {
-    try {
-      const secret = new TextEncoder().encode(
-        process.env.JWT_SECRET || 'your-secret-key'
-      );
-
-      const { payload } = await jose.jwtVerify(token, secret);
-      const decoded = payload as unknown as JWTPayload;
-      console.log("Token decoded successfully:", decoded);
-
-      // Add role to headers
-      requestHeaders.set('x-user-role', decoded.role);
-
-      // If on auth pages with valid token, redirect to appropriate dashboard
-      if (isAuthPage) {
-        const redirectUrl = decoded.role === 'ADMIN' ? '/admin' : '/dashboard';
-        console.log("Redirecting from auth page to:", redirectUrl);
-        return NextResponse.redirect(new URL(redirectUrl, request.url));
-      }
-
-      // Handle admin routes
-      if (isAdminPage && decoded.role !== 'ADMIN') {
-        console.log("Non-admin attempting to access admin route");
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-
-      // Allow access to protected routes
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-    } catch (error) {
-      console.error("Token verification failed:", error);
-      // Clear invalid token and redirect to login
+    const payload = await verifyJWT(token);
+    
+    if (!payload) {
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete('token');
       return response;
     }
+
+    const decoded = payload as { userId: string; role: string };
+    requestHeaders.set('x-user-role', decoded.role);
+
+    if (isAuthPage) {
+      const redirectUrl = decoded.role === 'ADMIN' ? '/admin' : '/dashboard';
+      console.log("Redirecting from auth page to:", redirectUrl);
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
+    }
+
+    if (isAdminPage && decoded.role !== 'ADMIN') {
+      console.log("Non-admin attempting to access admin route");
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   return NextResponse.next({
