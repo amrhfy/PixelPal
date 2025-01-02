@@ -38,15 +38,7 @@ export default function RecentUsers({ users }: RecentUsersProps) {
             <p className="text-sm text-muted-foreground">
               {formatDate(user.createdAt)}
             </p>
-            <p className={`text-xs ${
-              user.status === 'ACTIVE' 
-                ? 'text-green-500'
-                : user.status === 'SUSPENDED'
-                ? 'text-red-500'
-                : 'text-yellow-500'
-            }`}>
-              {user.status}
-            </p>
+            <p className="text-xs text-green-500">ACTIVE</p>
           </div>
         </Link>
       ))}

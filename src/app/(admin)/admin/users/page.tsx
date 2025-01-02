@@ -21,15 +21,20 @@ export default async function UsersPage() {
   const users = await getUsers();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Users Management</h1>
-      </div>
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Users Management</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage and monitor all users on the platform.
+          </p>
+        </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <Suspense fallback={<div>Loading...</div>}>
-          <UsersList users={users} />
-        </Suspense>
+        <div className="rounded-xl border border-border bg-card">
+          <Suspense fallback={<div>Loading...</div>}>
+            <UsersList users={users} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

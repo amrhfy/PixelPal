@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import * as jose from 'jose';
 import prisma from '@/lib/prisma';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
-import { Suspense } from 'react';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export { dynamic };
 
@@ -59,9 +59,7 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // Redirect admin users to admin dashboard if they're accessing the main dashboard page
   if (user.role === 'ADMIN' && headers().get('x-pathname') === '/dashboard') {
-    console.log("Admin user detected on main dashboard, redirecting to admin dashboard");
     redirect('/admin');
   }
 
@@ -69,11 +67,7 @@ export default async function DashboardLayout({
     <div className="flex h-[calc(100vh-64px)]">
       {user.role === 'ADMIN' ? <AdminSidebar /> : <DashboardSidebar />}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Suspense fallback={<div>Loading...</div>}>
-            {children}
-          </Suspense>
-        </div>
+        {children}
       </main>
     </div>
   );

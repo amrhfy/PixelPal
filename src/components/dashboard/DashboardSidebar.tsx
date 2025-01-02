@@ -3,76 +3,122 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 import { 
-  RiDashboardLine, 
+  RiDashboardLine,
   RiProjectorLine,
-  RiBriefcaseLine,
   RiTeamLine,
   RiMessage3Line,
   RiWalletLine,
-  RiSettings4Line
+  RiSettings4Line,
+  RiSearchLine
 } from 'react-icons/ri';
-import { cn } from '@/lib/utils';
 
 const freelancerLinks = [
-  { href: '/dashboard', label: 'Overview', icon: RiDashboardLine },
-  { href: '/dashboard/projects', label: 'My Projects', icon: RiProjectorLine },
-  { href: '/dashboard/proposals', label: 'Proposals', icon: RiBriefcaseLine },
-  { href: '/dashboard/messages', label: 'Messages', icon: RiMessage3Line },
-  { href: '/dashboard/earnings', label: 'Earnings', icon: RiWalletLine },
+  {
+    title: 'Overview',
+    href: '/dashboard',
+    icon: RiDashboardLine
+  },
+  {
+    title: 'Find Work',
+    href: '/dashboard/find-work',
+    icon: RiSearchLine
+  },
+  {
+    title: 'My Projects',
+    href: '/dashboard/projects',
+    icon: RiProjectorLine
+  },
+  {
+    title: 'Messages',
+    href: '/dashboard/messages',
+    icon: RiMessage3Line
+  },
+  {
+    title: 'Earnings',
+    href: '/dashboard/earnings',
+    icon: RiWalletLine
+  }
 ];
 
 const clientLinks = [
-  { href: '/dashboard', label: 'Overview', icon: RiDashboardLine },
-  { href: '/dashboard/projects', label: 'Projects', icon: RiProjectorLine },
-  { href: '/dashboard/talent', label: 'Find Talent', icon: RiTeamLine },
-  { href: '/dashboard/messages', label: 'Messages', icon: RiMessage3Line },
-  { href: '/dashboard/billing', label: 'Billing', icon: RiWalletLine },
+  {
+    title: 'Overview',
+    href: '/dashboard',
+    icon: RiDashboardLine
+  },
+  {
+    title: 'Projects',
+    href: '/dashboard/projects',
+    icon: RiProjectorLine
+  },
+  {
+    title: 'Find Talent',
+    href: '/dashboard/find-talent',
+    icon: RiTeamLine
+  },
+  {
+    title: 'Messages',
+    href: '/dashboard/messages',
+    icon: RiMessage3Line
+  },
+  {
+    title: 'Billing',
+    href: '/dashboard/billing',
+    icon: RiWalletLine
+  }
 ];
 
 export default function DashboardSidebar() {
-  const { user } = useAuth();
   const pathname = usePathname();
+  const { user } = useAuth();
   
   const links = user?.role === 'FREELANCER' ? freelancerLinks : clientLinks;
 
   return (
-    <aside className="w-64 border-r border-border bg-muted/30">
-      <nav className="p-4 space-y-2">
-        {links.map((link) => (
+    <div className="w-64 border-r border-border bg-card hidden md:block">
+      <div className="flex flex-col h-full">
+        <div className="space-y-1 py-4">
+          <div className="px-3 py-2">
+            <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+              Dashboard
+            </h2>
+            <div className="space-y-1">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent/50 transition-colors",
+                    pathname === link.href 
+                      ? "bg-accent/50 text-accent-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <link.icon className="w-4 h-4" />
+                  {link.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto border-t border-border p-4">
           <Link
-            key={link.href}
-            href={link.href}
+            href="/settings"
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative group",
-              link.disabled ? "pointer-events-none opacity-50" : "hover:bg-accent",
-              pathname === link.href && "bg-accent"
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent/50 transition-colors",
+              pathname === '/settings'
+                ? "bg-accent/50 text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <link.icon className="w-5 h-5" />
-            <span>{link.label}</span>
-            {link.disabled && (
-              <span className="absolute top-0 right-0 -translate-y-full bg-foreground text-background text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                Coming Soon
-              </span>
-            )}
+            <RiSettings4Line className="w-4 h-4" />
+            Settings
           </Link>
-        ))}
-
-        <div className="my-4 border-t border-border" />
-
-        <Link
-          href="/dashboard/settings"
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-            pathname === '/dashboard/settings'
-              ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-        >
-          <RiSettings4Line className="w-5 h-5" />
-          Settings
-        </Link>
-      </nav>
-    </aside>
+        </div>
+      </div>
+    </div>
   );
 } 

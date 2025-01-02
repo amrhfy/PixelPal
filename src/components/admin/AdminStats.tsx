@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from 'framer-motion';
 import { 
   RiTeamLine, 
   RiUserFollowLine,
@@ -48,11 +45,8 @@ export default function AdminStats({ stats }: AdminStatsProps) {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {statCards.map((stat, index) => (
-        <motion.div
+        <div
           key={stat.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
           className="p-6 rounded-xl border border-border bg-card"
         >
           <div className="flex items-center justify-between">
@@ -64,7 +58,7 @@ export default function AdminStats({ stats }: AdminStatsProps) {
             <h3 className="text-sm font-medium text-muted-foreground">{stat.title}</h3>
             <p className="text-2xl font-semibold mt-1">{stat.value}</p>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

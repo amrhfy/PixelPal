@@ -41,17 +41,7 @@ export default function RecentProjects({ projects }: RecentProjectsProps) {
             <p className="text-sm text-muted-foreground">
               {formatDate(project.createdAt)}
             </p>
-            <p className={`text-xs ${
-              project.status === 'OPEN'
-                ? 'text-blue-500'
-                : project.status === 'IN_PROGRESS'
-                ? 'text-green-500'
-                : project.status === 'COMPLETED'
-                ? 'text-purple-500'
-                : 'text-red-500'
-            }`}>
-              {project.status}
-            </p>
+            <p className="text-xs text-blue-500">{project.status}</p>
           </div>
         </Link>
       ))}

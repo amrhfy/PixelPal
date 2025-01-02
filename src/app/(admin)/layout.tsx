@@ -5,6 +5,7 @@ import * as jose from 'jose';
 import prisma from '@/lib/prisma';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Suspense } from 'react';
+import DashboardSkeleton from '@/components/shared/DashboardSkeleton';
 
 export { dynamic };
 
@@ -53,7 +54,6 @@ export default async function AdminLayout({
   const user = await getUser();
   
   if (!user || user.role !== 'ADMIN') {
-    console.log("Non-admin user detected, redirecting to dashboard");
     redirect('/dashboard');
   }
 
@@ -61,11 +61,7 @@ export default async function AdminLayout({
     <div className="flex h-[calc(100vh-64px)]">
       <AdminSidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Suspense fallback={<div>Loading...</div>}>
-            {children}
-          </Suspense>
-        </div>
+        {children}
       </main>
     </div>
   );
