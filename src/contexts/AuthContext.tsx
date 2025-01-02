@@ -33,41 +33,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   const checkAuth = async () => {
     try {
       setIsLoading(true);
-      console.log('Checking auth, current pathname:', pathname);
-      
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
       });
       
       if (!response.ok) {
-        console.log('Auth check failed, status:', response.status);
         setUser(null);
-        if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
-          console.log('Redirecting to login from protected route');
-          await router.push('/login');
+        if ((pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) && 
+            pathname !== '/login') {
+          router.replace('/login');
         }
         return;
       }
       
       const { user } = await response.json();
-      console.log('Auth check successful, user:', user);
       setUser(user);
 
-      if (pathname === '/login' || pathname === '/register') {
-        const redirectTo = user.role === 'ADMIN' ? '/admin' : '/dashboard';
-        console.log('Redirecting from auth page to:', redirectTo);
-        await router.push(redirectTo);
+      if (user && (pathname === '/login' || pathname === '/register')) {
+        router.replace(user.role === 'ADMIN' ? '/admin' : '/dashboard');
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -84,14 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsAuthenticating(true);
     try {
-      console.log('Attempting login...');
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
@@ -99,14 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      console.log('Login successful, user:', data.user);
       setUser(data.user);
-      
-      const redirectTo = data.user.role === 'ADMIN' ? '/admin' : '/dashboard';
-      console.log('Redirecting to:', redirectTo);
-      await router.push(redirectTo);
+      router.replace(data.user.role === 'ADMIN' ? '/admin' : '/dashboard');
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     } finally {
       setIsAuthenticating(false);
@@ -149,16 +128,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
-      {(isLoading || isAuthenticating || isLoggingOut || isNavigating) && (
+      {(isLoading || isAuthenticating || isLoggingOut) && (
         <LoadingScreen 
           message={
             isAuthenticating 
               ? "Authenticating..." 
               : isLoggingOut 
                 ? "Signing out..." 
-                : isNavigating
-                  ? "Loading page..."
-                  : "Loading..."
+                : "Loading..."
           }
         />
       )}
