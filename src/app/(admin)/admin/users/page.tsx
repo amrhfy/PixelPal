@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import prisma from '@/lib/prisma';
 import UsersList from '@/components/admin/UsersList';
-import { UserStatus } from '@prisma/client';
 
 async function getUsers() {
   const users = await prisma.user.findMany({

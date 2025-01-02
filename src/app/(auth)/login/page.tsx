@@ -28,8 +28,8 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.push('/dashboard');
-    } catch (err) {
-      setError('Invalid credentials');
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials');
     } finally {
       setIsLoading(false);
     }

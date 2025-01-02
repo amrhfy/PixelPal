@@ -12,6 +12,16 @@ import { useRouter } from 'next/navigation';
 
 type UserRole = 'FREELANCER' | 'CLIENT' | null;
 
+interface RegisterFormElements extends HTMLFormControlsCollection {
+  email: HTMLInputElement;
+  password: HTMLInputElement;
+  name: HTMLInputElement;
+}
+
+interface RegisterFormElement extends HTMLFormElement {
+  readonly elements: RegisterFormElements;
+}
+
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
@@ -19,16 +29,16 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<RegisterFormElement>) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    const form = e.target as HTMLFormElement;
+    const form = e.currentTarget;
     const data = {
-      email: form.email.value,
-      password: form.password.value,
-      name: form.name.value,
+      email: form.elements.email.value,
+      password: form.elements.password.value,
+      name: form.elements.name.value,
       role: role as 'FREELANCER' | 'CLIENT'
     };
 
