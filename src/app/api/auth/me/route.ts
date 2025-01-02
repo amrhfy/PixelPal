@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import * as jose from 'jose';
 import prisma from '@/lib/prisma';
+import { dynamic } from '@/app/config';
+
+export { dynamic };
 
 export async function GET(req: Request) {
   try {

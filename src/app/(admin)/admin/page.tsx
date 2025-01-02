@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import AdminStats from '@/components/admin/AdminStats';
 import RecentUsers from '@/components/admin/RecentUsers';
 import RecentProjects from '@/components/admin/RecentProjects';
+import { dynamic } from '@/app/config';
 
 async function getAdminData() {
   console.log("Fetching admin data...");
@@ -72,4 +73,6 @@ export default async function AdminDashboard() {
       </div>
     </div>
   );
-} 
+}
+
+export { dynamic }; 

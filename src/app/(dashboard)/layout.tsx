@@ -1,9 +1,12 @@
+import { dynamic } from '@/app/config';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import * as jose from 'jose';
 import prisma from '@/lib/prisma';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import { Suspense } from 'react';
+
+export { dynamic };
 
 async function getUser() {
   try {

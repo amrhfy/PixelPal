@@ -1,9 +1,12 @@
+import { dynamic } from '@/app/config';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import * as jose from 'jose';
 import prisma from '@/lib/prisma';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Suspense } from 'react';
+
+export { dynamic };
 
 async function getUser() {
   try {
@@ -24,7 +27,6 @@ async function getUser() {
 
     const { payload } = await jose.jwtVerify(token, secret);
     const decoded = payload as unknown as { userId: string; role: string };
-    console.log("Token decoded in admin layout:", decoded);
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -36,7 +38,6 @@ async function getUser() {
       }
     });
 
-    console.log("User found in admin layout:", user);
     return user;
   } catch (error) {
     console.error("Error in admin layout:", error);

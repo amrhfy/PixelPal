@@ -1,6 +1,9 @@
+import { dynamic } from '@/app/config';
 import { Suspense } from 'react';
 import prisma from '@/lib/prisma';
 import UsersList from '@/components/admin/UsersList';
+
+export { dynamic };
 
 async function getUsers() {
   const users = await prisma.user.findMany({
