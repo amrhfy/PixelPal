@@ -37,15 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    setIsNavigating(true);
-    const timer = setTimeout(() => {
-      setIsNavigating(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [pathname]);
-
   const checkAuth = async () => {
     try {
       setIsLoading(true);
@@ -59,9 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (!response.ok) {
         setUser(null);
-        if (window.location.pathname.startsWith('/dashboard') || 
-            window.location.pathname.startsWith('/admin')) {
-          router.push('/login');
+        if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
+          router.replace('/login');
         }
         return;
       }
@@ -69,9 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user } = await response.json();
       setUser(user);
 
-      if (['/login', '/register'].includes(window.location.pathname)) {
+      if (pathname === '/login' || pathname === '/register') {
         const redirectTo = user.role === 'ADMIN' ? '/admin' : '/dashboard';
-        router.push(redirectTo);
+        router.replace(redirectTo);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -102,7 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      await checkAuth();
+      setUser(data.user);
+      
+      router.replace(data.user.role === 'ADMIN' ? '/admin' : '/dashboard');
     } catch (error) {
       throw error;
     } finally {
@@ -136,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include'
       });
       setUser(null);
-      await router.push('/login');
+      router.replace('/login');
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
