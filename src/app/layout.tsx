@@ -2,6 +2,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/shared/Navbar';
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import PageTransition from '@/components/shared/PageTransition';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -19,7 +20,9 @@ export default function RootLayout({
       <body className={`${poppins.variable} font-poppins antialiased`}>
         <AuthProvider>
           <Navbar />
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </AuthProvider>
       </body>
     </html>

@@ -9,6 +9,7 @@ import Input from '@/components/shared/Input';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import ErrorAlert from '@/components/shared/ErrorAlert';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -96,15 +97,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm"
-            >
-              {error}
-            </motion.div>
-          )}
+          {error && <ErrorAlert message={error} />}
           
           <Input
             type="email"

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import LoadingScreen from '@/components/shared/LoadingScreen';
 
 interface User {
   id: string;
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const router = useRouter();
 
   const checkAuth = async () => {
@@ -58,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    setIsAuthenticating(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -73,6 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push(data.redirectTo);
     } catch (error) {
       throw error;
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -109,6 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+      {(isLoading || isAuthenticating) && (
+        <LoadingScreen 
+          message={isAuthenticating ? "Authenticating..." : "Loading..."}
+        />
+      )}
       {children}
     </AuthContext.Provider>
   );

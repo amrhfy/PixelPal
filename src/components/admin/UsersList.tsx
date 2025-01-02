@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import { User, Profile, UserStatus } from '@prisma/client';
-import { RiMoreLine } from 'react-icons/ri';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RiSearchLine, RiEditLine, RiDeleteBinLine, RiFilterLine } from 'react-icons/ri';
 import { formatDistanceToNow } from 'date-fns';
+import Button from '@/components/shared/Button';
+import EditUserModal from './EditUserModal';
+import { cn } from '@/lib/utils';
 
 interface UsersListProps {
   users: (User & {
@@ -11,110 +15,205 @@ interface UsersListProps {
   })[];
 }
 
-export default function UsersList({ users }: UsersListProps) {
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+export default function UsersList({ users: initialUsers }: UsersListProps) {
+  const [users, setUsers] = useState(initialUsers);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<string>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
 
-  const updateUserStatus = async (userId: string, status: UserStatus) => {
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = selectedRole === 'ALL' || user.role === selectedRole;
+    const matchesStatus = selectedStatus === 'ALL' || user.status === selectedStatus;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const handleStatusChange = async (userId: string, status: UserStatus) => {
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      setIsLoading(true);
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
 
-      if (!res.ok) throw new Error('Failed to update user');
-      
-      // Refresh the page to show updated data
-      window.location.reload();
+      if (!response.ok) throw new Error('Failed to update user');
+
+      const updatedUser = await response.json();
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, ...updatedUser } : user
+      ));
     } catch (error) {
       console.error('Error updating user:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete user');
+
+      setUsers(users.filter(user => user.id !== userId));
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: UserStatus) => {
+    switch (status) {
+      case 'ACTIVE':
+        return 'bg-green-500/10 text-green-600 border-green-500/20';
+      case 'SUSPENDED':
+        return 'bg-red-500/10 text-red-600 border-red-500/20';
+      case 'PENDING':
+        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
     }
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Name</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Email</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Role</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Status</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Joined</th>
-            <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id} className="border-b border-border">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6 p-6"
+    >
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <Button className="shrink-0 opacity-50 cursor-not-allowed" disabled>
+          Add New User
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="relative">
+          <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+          className="px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          <option value="ALL">All Roles</option>
+          <option value="ADMIN">Admin</option>
+          <option value="FREELANCER">Freelancer</option>
+          <option value="CLIENT">Client</option>
+        </select>
+
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          <option value="ALL">All Status</option>
+          <option value="ACTIVE">Active</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="PENDING">Pending</option>
+        </select>
+      </div>
+
+      {/* Users Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <AnimatePresence>
+          {filteredUsers.map((user) => (
+            <motion.div
+              key={user.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative group rounded-lg border border-border bg-background p-6 hover:border-primary/50 transition-colors"
+            >
+              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingUser(user)}
+                    disabled={isLoading}
+                  >
+                    <RiEditLine className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(user.id)}
+                    disabled={isLoading}
+                    className="text-destructive hover:text-destructive/80"
+                  >
+                    <RiDeleteBinLine className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold">
                     {user.name[0].toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-medium">{user.name}</div>
-                    {user.profile?.location && (
-                      <div className="text-sm text-muted-foreground">{user.profile.location}</div>
-                    )}
+                    <h3 className="font-semibold">{user.name}</h3>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                  {user.role}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  user.status === 'ACTIVE' 
-                    ? 'bg-green-100 text-green-700'
-                    : user.status === 'SUSPENDED'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {user.status}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right">
-                <div className="relative">
-                  <button
-                    onClick={() => setSelectedUser(selectedUser === user.id ? null : user.id)}
-                    className="p-2 hover:bg-accent rounded-lg transition-colors"
-                  >
-                    <RiMoreLine className="w-5 h-5" />
-                  </button>
-                  
-                  {selectedUser === user.id && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-background shadow-lg z-10">
-                      {user.status !== 'ACTIVE' && (
-                        <button
-                          onClick={() => updateUserStatus(user.id, 'ACTIVE')}
-                          className="w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors text-green-600"
-                        >
-                          Activate User
-                        </button>
-                      )}
-                      {user.status !== 'SUSPENDED' && (
-                        <button
-                          onClick={() => updateUserStatus(user.id, 'SUSPENDED')}
-                          className="w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors text-red-600"
-                        >
-                          Suspend User
-                        </button>
-                      )}
-                    </div>
-                  )}
+
+                <div className="flex items-center gap-3">
+                  <div className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20">
+                    {user.role}
+                  </div>
+                  <div className={cn(
+                    "px-3 py-1 rounded-full text-sm font-medium border",
+                    getStatusColor(user.status)
+                  )}>
+                    {user.status}
+                  </div>
                 </div>
-              </td>
-            </tr>
+
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </AnimatePresence>
+      </div>
+
+      {editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={(updatedUser) => {
+            setUsers(users.map(u => 
+              u.id === updatedUser.id ? { ...u, ...updatedUser } : u
+            ));
+            setEditingUser(null);
+          }}
+        />
+      )}
+    </motion.div>
   );
 } 

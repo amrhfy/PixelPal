@@ -46,7 +46,7 @@ export default function Navbar() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     pathname === link.href
                       ? 'text-primary bg-primary/10'
-                      : 'text-foreground/70 hover:text-foreground hover:bg-accent'
+                      : 'text-muted-foreground hover:text-muted-foreground/80 hover:bg-accent/50 cursor-not-allowed opacity-50'
                   }`}
                 >
                   {link.label}

@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import HeroContent from '@/components/landing/HeroContent';
-import StatsSection from '@/components/landing/StatsSection';
 import PartnersSection from '@/components/landing/PartnersSection';
 
 export default function Home() {
@@ -14,11 +13,10 @@ export default function Home() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[400px] bg-primary/10 rounded-full blur-3xl" />
       
       {/* Main Content */}
-      <div className="flex-1 flex items-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="flex justify-center">
             <HeroContent />
-            <StatsSection />
           </div>
         </div>
       </div>

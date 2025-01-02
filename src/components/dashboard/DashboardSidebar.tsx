@@ -12,6 +12,7 @@ import {
   RiWalletLine,
   RiSettings4Line
 } from 'react-icons/ri';
+import { cn } from '@/lib/utils';
 
 const freelancerLinks = [
   { href: '/dashboard', label: 'Overview', icon: RiDashboardLine },
@@ -42,14 +43,19 @@ export default function DashboardSidebar() {
           <Link
             key={link.href}
             href={link.href}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              pathname === link.href
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-            }`}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative group",
+              link.disabled ? "pointer-events-none opacity-50" : "hover:bg-accent",
+              pathname === link.href && "bg-accent"
+            )}
           >
             <link.icon className="w-5 h-5" />
-            {link.label}
+            <span>{link.label}</span>
+            {link.disabled && (
+              <span className="absolute top-0 right-0 -translate-y-full bg-foreground text-background text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                Coming Soon
+              </span>
+            )}
           </Link>
         ))}
 

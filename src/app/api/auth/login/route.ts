@@ -7,13 +7,21 @@ export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
+    // Validate input fields
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'No account found with this email' },
         { status: 401 }
       );
     }
@@ -21,8 +29,16 @@ export async function POST(req: Request) {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Incorrect password' },
         { status: 401 }
+      );
+    }
+
+    // Check if user is suspended
+    if (user.status === 'SUSPENDED') {
+      return NextResponse.json(
+        { error: 'Your account has been suspended. Please contact support.' },
+        { status: 403 }
       );
     }
 
@@ -52,8 +68,9 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Something went wrong' },
+      { error: 'Failed to log in. Please try again later.' },
       { status: 500 }
     );
   }
