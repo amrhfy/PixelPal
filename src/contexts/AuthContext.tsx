@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 
 interface User {
@@ -32,21 +32,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsNavigating(true);
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   const checkAuth = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/auth/me', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
       
       if (!response.ok) {
         setUser(null);
+        if (window.location.pathname.startsWith('/dashboard') || 
+            window.location.pathname.startsWith('/admin')) {
+          router.push('/login');
+        }
         return;
       }
       
-      const data = await response.json();
-      setUser(data.user);
+      const { user } = await response.json();
+      setUser(user);
+
+      if (['/login', '/register'].includes(window.location.pathname)) {
+        const redirectTo = user.role === 'ADMIN' ? '/admin' : '/dashboard';
+        router.push(redirectTo);
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
       setUser(null);
@@ -64,7 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
         credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
@@ -73,7 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok) throw new Error(data.error);
 
       await checkAuth();
-      router.push(data.redirectTo);
     } catch (error) {
       throw error;
     } finally {
@@ -101,22 +130,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      setIsLoggingOut(true);
       await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });
       setUser(null);
-      router.push('/login');
+      await router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
-      {(isLoading || isAuthenticating) && (
+      {(isLoading || isAuthenticating || isLoggingOut || isNavigating) && (
         <LoadingScreen 
-          message={isAuthenticating ? "Authenticating..." : "Loading..."}
+          message={
+            isAuthenticating 
+              ? "Authenticating..." 
+              : isLoggingOut 
+                ? "Signing out..." 
+                : isNavigating
+                  ? "Loading page..."
+                  : "Loading..."
+          }
         />
       )}
       {children}

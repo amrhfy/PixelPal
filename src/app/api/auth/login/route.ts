@@ -1,68 +1,49 @@
 import { NextResponse } from 'next/server';
 import * as bcrypt from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import * as jose from 'jose';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    // Validate input fields
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
-
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json(
-        { error: 'No account found with this email' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return NextResponse.json(
-        { error: 'Incorrect password' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is suspended
-    if (user.status === 'SUSPENDED') {
-      return NextResponse.json(
-        { error: 'Your account has been suspended. Please contact support.' },
-        { status: 403 }
-      );
-    }
-
-    const token = sign(
-      { userId: user.id },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || 'your-secret-key'
     );
+
+    const token = await new jose.SignJWT({ 
+      userId: user.id,
+      role: user.role 
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('7d')
+      .sign(secret);
 
     const response = NextResponse.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role,
-        status: user.status
-      },
-      redirectTo: user.role === 'ADMIN' ? '/admin' : '/dashboard'
+        role: user.role
+      }
     });
 
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 // 7 days
     });
 
@@ -70,7 +51,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Failed to log in. Please try again later.' },
+      { error: 'Failed to log in' },
       { status: 500 }
     );
   }

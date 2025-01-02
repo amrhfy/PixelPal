@@ -1,25 +1,45 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { verify } from 'jsonwebtoken';
+import * as jose from 'jose';
 import prisma from '@/lib/prisma';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Suspense } from 'react';
 
 async function getUser() {
   try {
-    const headersList = await headers();
-    const cookieHeader = await headersList.get('cookie');
+    const headersList = headers();
+    const cookieHeader = headersList.get('cookie');
     const token = cookieHeader?.split(';')
       .find(c => c.trim().startsWith('token='))
       ?.split('=')[1];
 
-    if (!token) return null;
+    if (!token) {
+      console.log("No token found in admin layout");
+      return null;
+    }
 
-    const decoded = verify(token, process.env.JWT_SECRET || 'secret') as { userId: string };
-    return await prisma.user.findUnique({
-      where: { id: decoded.userId }
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || 'your-secret-key'
+    );
+
+    const { payload } = await jose.jwtVerify(token, secret);
+    const decoded = payload as unknown as { userId: string; role: string };
+    console.log("Token decoded in admin layout:", decoded);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
     });
-  } catch {
+
+    console.log("User found in admin layout:", user);
+    return user;
+  } catch (error) {
+    console.error("Error in admin layout:", error);
     return null;
   }
 }
@@ -32,7 +52,8 @@ export default async function AdminLayout({
   const user = await getUser();
   
   if (!user || user.role !== 'ADMIN') {
-    redirect('/login');
+    console.log("Non-admin user detected, redirecting to dashboard");
+    redirect('/dashboard');
   }
 
   return (

@@ -20,6 +20,10 @@ export default {
         "muted-foreground": "var(--muted-foreground)",
         border: "var(--border)",
         ring: "var(--ring)",
+        success: {
+          DEFAULT: '#10B981',
+          foreground: '#FFFFFF',
+        }
       },
       fontFamily: {
         poppins: ['var(--font-poppins)'],
