@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PixelPal
 
-## Getting Started
+## Overview
+PixelPal is a personal project developed by AMRHFY. This repository is made public for educational purposes  only.
 
-First, run the development server:
+## Educational Purpose Statement
+This project is shared publicly to serve as a learning resource for developers interested in freelancing platform. While the code is visible to everyone, it remains the intellectual property of AMRHFY.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## License
+This project is licensed under the terms of the license included in this repository. See the [LICENSE](LICENSE) file for details. While the code is public for educational purposes, permissions for use, modification, and distribution are limited.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Acknowledgements
+- [Optional: credit any resources, libraries, or inspirations]
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Contact
+For questions about this educational resource, you can reach me at:
+- GitHub: [@amrhfy](https://github.com/amrhfy)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+© 2025 AMRHFY. All rights reserved.
