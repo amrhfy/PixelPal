@@ -9,9 +9,6 @@ This project is shared publicly to serve as a learning resource for developers i
 ## License
 This project is licensed under the terms of the license included in this repository. See the [LICENSE](LICENSE.MD) file for details. While the code is public for educational purposes, permissions for use, modification, and distribution are limited.
 
-## Acknowledgements
-- [Optional: credit any resources, libraries, or inspirations]
-
 ## Contact
 For questions about this educational resource, you can reach me at:
 - GitHub: [@amrhfy](https://github.com/amrhfy)
